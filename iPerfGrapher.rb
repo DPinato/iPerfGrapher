@@ -1,8 +1,8 @@
 #!/usr/bin/ruby
 # usage: ./iPerfGrapher.rb
-# iperf -c localhost -f M -i 1 --reportstyle C -P 1
+# sample iperf command: "iperf -c localhost -f M -i 1 --reportstyle C -P 5"
+# this relies on using the iperf option --reportstyle, to extract values from the CSV
 # the -o or --output option in iperf does not seem to work in Mac OS
-# this only works when sending a single flow, i.e. -P 1
 # TODO: is it possible to get losses?
 # TODO: checkout iperf3, it can give output in JSON
 
