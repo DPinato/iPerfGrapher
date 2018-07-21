@@ -1,8 +1,10 @@
 #!/usr/bin/ruby
 # usage: ./iPerfGrapher.rb
 # iperf -c localhost -f M -i 1 --reportstyle C -P 1
-# the -o or --output option does not seem to work in Mac OS
+# the -o or --output option in iperf does not seem to work in Mac OS
 # this only works when sending a single flow, i.e. -P 1
+# TODO: is it possible to get losses?
+# TODO: checkout iperf3, it can give output in JSON
 
 require 'pp'
 require 'gnuplot'
