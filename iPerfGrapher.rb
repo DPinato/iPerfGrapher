@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 # usage: ./iPerfGrapher.rb
-# sample iperf command: "iperf -c localhost -f M -i 1 --reportstyle C -P 5"
-# this relies on using the iperf option --reportstyle, to extract values from the CSV
+# sample iperf command: "iperf -c <server> -i <interval> --reportstyle C -P <parallel>"
+# this script requires the iperf option --reportstyle, to extract values from the CSV
 # the -o or --output option in iperf does not seem to work in Mac OS
 # TODO: is it possible to get losses?
 # TODO: checkout iperf3, it can give output in JSON
@@ -9,6 +9,9 @@
 require 'pp'
 require 'gnuplot'
 require 'csv'
+require 'date'
+require 'open3'
+
 
 BEGIN {
   # this is called before the program is run
@@ -25,8 +28,6 @@ END {
 # timestamp, srcAddr, srcPort, dstAddr, dstPort, transferID, interval, txBytes, bitsPerSecond
 # https://serverfault.com/questions/566737/iperf-csv-output-format
 # the very last row is the total
-# Struct.new("IPerfData", :sample, :timestamp, :srcIP, :srcPort, :dstIP, :dstPort, :transferID, :interval, :txBytes, :bps)
-
 class IPerfData
 	def initialize()
 		@srcIP = ""
@@ -89,21 +90,36 @@ end
 
 
 
-iperfCommand = "iperf -c localhost -f M -i 1 -t 100 --reportstyle C -P 5"
-plotFile = "/Users/davide/Desktop/Code/RUBY/iPerfGrapher/plot.png"
 
+iperfCommand = "iperf -c localhost -f M -i 1 -t 5 --reportstyle C -P 3"
+outputDir = "/Users/davide/Desktop/Code/RUBY/iPerfGrapher/"
+now = DateTime.now.strftime("%Y%b%d-%H%M%S")
 puts "iperfCommand: #{iperfCommand}"
-puts "plotFile: #{plotFile}"
+puts "outputDir: #{outputDir}"
+puts "now: #{now}"
 
-# run iperf, # TODO: there are no error checks on this command
-output = `#{iperfCommand}`
+# run iperf, check if it connects successfully
+stdout, stderr, status = Open3.capture3("#{iperfCommand}")
+# puts stdout
+# puts stderr
+# puts status
+if stderr.include?("connect failed")
+	puts "iPerf failed to connect to the server."
+	exit
+end
 
-# TODO: save raw data to file
+
+# save raw data to file
+rawFileLoc = outputDir + "rawdata_" + now + ".dat"
+rawFile = File.open(rawFileLoc, "w")
+rawFile << stdout
+rawFile.close
+
 
 # parse output of iPerf command
 outputData = Hash.new
 
-CSV.parse(output) do |row|
+CSV.parse(stdout) do |row|
 	# check if flow was already put in the hash using the transferID
 	flowID = row[5]
 
@@ -132,4 +148,5 @@ end
 # puts outputData.size
 # pp outputData
 
-plotData(outputData, plotFile)
+plotFileLoc = outputDir + "plot_" + now + ".png"
+plotData(outputData, plotFileLoc)
